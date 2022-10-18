@@ -7,4 +7,4 @@ const postgresClient = new pg.Pool({
     connectionString: process.env.DB_CONNECTION_STRING
 })
 
-exports.postgresClient = postgresClient
+module.exports = postgresClient;
