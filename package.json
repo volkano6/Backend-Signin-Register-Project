@@ -1,0 +1,19 @@
+{
+  "name": "pixselect-backend-challenge",
+  "version": "1.0.0",
+  "description": "Login Register Sytstem",
+  "main": "main.js",
+  "scripts": {
+    "start": "nodemon app.js"
+  },
+  "author": "Volkan Öztoklu",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "pg": "^8.8.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.20"
+  }
+}
