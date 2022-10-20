@@ -3,7 +3,10 @@ const path = require('path')
 const postgresClient = require('./config/db')
 const bodyParser = require('body-parser')
 const jwt = require('jsonwebtoken')
-const checkJwt = require('./auth');
+const checkJwt = require('./auth')
+const cookieParser = require('cookie-parser');
+
+
 
 const PORT = 3000
 
@@ -14,10 +17,12 @@ app.use(express.static('public'))
 app.use(express.json())
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
+app.use(cookieParser())
 
 
 //Routes
 app.get('/login', function (req, res) {
+
   res.sendFile(path.join(__dirname+'/views/login.html'))
 })
 app.get('/register', function (req, res) {
@@ -26,6 +31,7 @@ app.get('/register', function (req, res) {
 app.post('/register', async function(req, res) {
   
   try {
+    console.log(req.body)
     //Creating user in DB
     const text = "INSERT INTO users(email, password, fullname) VALUES($1, crypt($2, gen_salt('bf')), $3) RETURNING *"
     const values = [req.body.email, req.body.password, req.body.fullName]
@@ -52,10 +58,11 @@ app.post('/register', async function(req, res) {
 })
 app.post('/login', async function(req, res) {
   try {
-
+    console.log(req.body) 
     const text = "SELECT * FROM users WHERE email =$1 AND password = crypt($2, password)"
     const values = [req.body.email, req.body.password]
     const { rows } = await postgresClient.query(text, values)
+    console.log(rows)
     if (!rows.length) {
       console.log('User not found')
       return res.status(404).json({message: 'User not found'})
@@ -78,7 +85,7 @@ app.post('/login', async function(req, res) {
   } 
 })
 app.get('/posts', checkJwt ,function (req, res) {
-  res.send('<h2> Selena </h2>')
+  res.send('<h2> Selena </h2>') 
 })
 
 app.get('/logout', function(req,res) {
