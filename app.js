@@ -5,6 +5,7 @@ const bodyParser = require('body-parser')
 const jwt = require('jsonwebtoken')
 const checkJwt = require('./auth')
 const cookieParser = require('cookie-parser');
+const ejs = require('ejs');
 
 
 
@@ -28,6 +29,22 @@ app.get('/login', function (req, res) {
 app.get('/register', function (req, res) {
   res.sendFile(path.join(__dirname+'/views/register.html'))
 })
+app.get('/deneme', function(req, res) { 
+  
+  const text = "SELECT * FROM users"
+  postgresClient.query(text, (err, res) => {
+    if (err) {
+      console.log(err)
+    }else{
+      console.log(res.rows)
+    }
+  })
+  
+  res.render('User_list_page.ejs', {
+    user: "Volkan"
+  })
+})
+
 app.post('/register', async function(req, res) {
   
   try {
@@ -85,7 +102,9 @@ app.post('/login', async function(req, res) {
   } 
 })
 app.get('/posts', checkJwt ,function (req, res) {
-  res.send('<h2> Selena </h2>') 
+  
+
+  res.send('<h2> Selena </h2>')
 })
 
 app.get('/logout', function(req,res) {

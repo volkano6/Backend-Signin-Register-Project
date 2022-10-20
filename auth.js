@@ -2,10 +2,10 @@ const jwt = require('jsonwebtoken')
 
 module.exports = (req, res, next) => {
     try {
-        console.log("token kontrolü")
+        console.log("verify token.")
         const token = req.cookies.jwt
-        console.log(token)
         const decodedToken = jwt.verify(token, 'secretKey')
+        console.log("token is correct.")
         next()
     } catch (error) {
         if (error.name === 'TokenExpiredError') {
