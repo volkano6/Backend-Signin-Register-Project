@@ -23,16 +23,16 @@ app.use(cookieParser())
 
 //Routes
 app.get('/login', function (req, res) {
-
+  res.cookie('jwt', '',{maxAge:1})
   res.sendFile(path.join(__dirname+'/views/login.html'))
 })
 app.get('/register', function (req, res) {
+  res.cookie('jwt', '',{maxAge:1})
   res.sendFile(path.join(__dirname+'/views/register.html'))
 })
 app.get('/deneme', async function(req, res) { 
   
 })
-
 app.post('/register', async function(req, res) {
   try {
     console.log(req.body)
@@ -81,19 +81,72 @@ app.post('/login', async function(req, res) {
       exp: Math.floor(Date.now() / 1000) + (60*60*24)
     }, 'secretKey')
     res.cookie('jwt', token, {httpOnly: true,maxAge: 60*60*24*1000})
-    return res.status(200).redirect('/posts')
+    return res.status(200).redirect('/users')
      
   } catch (error) {
     console.log("Error occured", error.message)
     return res.status(400).json({message: error.message})
   } 
 })
-app.get('/posts', checkJwt , async function (req, res) {
+app.get('/users', checkJwt , async function (req, res) {
   const text = "SELECT * FROM users"
   const { rows } = await postgresClient.query(text)
   res.render('User_list_page.ejs', {
     rows
   })
+
+})
+app.get('/user/update/:paramId', checkJwt , async function (req, res) {
+  const text = "SELECT * FROM users WHERE id = $1"
+  const value = [req.params.paramId]
+  const { rows } = await postgresClient.query(text, value)
+  res.render("user_update.ejs", { 
+    rows
+  })
+
+}) 
+app.post('/updating/:paramId', checkJwt , async function(req, res) {
+  try {
+    const text = "SELECT * FROM users WHERE id = $1 AND password = crypt($2, password)"
+    const values = [req.params.paramId, req.body.oldpassword]
+    const { rows } = await postgresClient.query(text, values)
+    console.log(rows)
+    if (!rows.length) {
+      console.log('User not found')
+      return res.status(404).json({message: 'User not found'})
+    } 
+    if (req.body.newpassword == '') {
+      const text_for_update = "UPDATE users SET name = $1, surname = $2, email = $3 WHERE id = $4 RETURNING*"
+      const values_for_update = [req.body.name, req.body.surname, req.body.email, req.params.paramId]
+      const { rows } = await postgresClient.query(text_for_update, values_for_update)
+      res.redirect("/users")
+    } else {
+      const text_for_update = "UPDATE users SET name = $1, surname = $2, email = $3, password = crypt($4,password) WHERE id = $5 RETURNING*"
+      const values_for_update = [req.body.name, req.body.surname, req.body.email, req.body.newpassword, req.params.paramId]
+      const { rows } = await postgresClient.query(text_for_update, values_for_update)
+      res.redirect("/users")
+    }
+
+  } catch (error) {
+    console.log("Error occured", error.message)
+    return res.status(400).json({message:error.message})
+  }
+})
+app.get('/user/delete/:paramId', checkJwt , async function(req, res) {
+  try {
+    const text = "DELETE FROM users WHERE id = $1 RETURNING *"
+    const value = [req.params.paramId]
+    const { rows } = await postgresClient.query(text, value)
+    console.log(rows)
+    res.redirect("/users")
+    if (!rows.length) {
+      console.log('User not found')
+      return res.status(404).json({message: 'User not found'})
+    } 
+  } catch (error) {
+    console.log("Error occured", error.message)
+    return res.status(400).json({message:error.message})
+  }
 })
 
 app.get('/logout', function(req,res) {
