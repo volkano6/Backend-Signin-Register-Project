@@ -29,44 +29,32 @@ app.get('/login', function (req, res) {
 app.get('/register', function (req, res) {
   res.sendFile(path.join(__dirname+'/views/register.html'))
 })
-app.get('/deneme', function(req, res) { 
+app.get('/deneme', async function(req, res) { 
   
-  const text = "SELECT * FROM users"
-  postgresClient.query(text, (err, res) => {
-    if (err) {
-      console.log(err)
-    }else{
-      console.log(res.rows)
-    }
-  })
-  
-  res.render('User_list_page.ejs', {
-    user: "Volkan"
-  })
 })
 
 app.post('/register', async function(req, res) {
-  
   try {
     console.log(req.body)
     //Creating user in DB
-    const text = "INSERT INTO users(email, password, fullname) VALUES($1, crypt($2, gen_salt('bf')), $3) RETURNING *"
-    const values = [req.body.email, req.body.password, req.body.fullName]
+    const text = "INSERT INTO users(name, surname, email, password, register_date) VALUES($1, $2, $3, crypt($4, gen_salt('bf')), $5) RETURNING *"
+    const  now_date = new Date()
+    const values = [req.body.name, req.body.surname, req.body.email, req.body.password, now_date]
     const { rows } = await postgresClient.query(text, values)
     console.log("User is created.")
     
     // Creating TOKEN
-    const {email, fullName} =req.body
+    const {name, surname, email} =req.body
     const token =jwt.sign({
+      name: name,
+      surname:surname,
       email: email,
-      fullName: fullName,
       exp: Math.floor(Date.now() / 1000) + (60*60*24)
     }, 'secretKey')
     console.log(token)
     console.log("JWT TOKEN is created.")
     res.cookie('jwt', token, {httpOnly: true,maxAge: 60*60*24*1000})
     return res.status(200).redirect("/login")    
-
 
   } catch (error) {
     console.log("Error occured", error.message)
@@ -84,15 +72,14 @@ app.post('/login', async function(req, res) {
       console.log('User not found')
       return res.status(404).json({message: 'User not found'})
     }  
-    
     // Creating TOKEN
-    const {email, fullName} =req.body
+    const {name, surname, email} =req.body
     const token =jwt.sign({
+      name: name,
+      surname:surname,
       email: email,
-      fullName: fullName,
       exp: Math.floor(Date.now() / 1000) + (60*60*24)
     }, 'secretKey')
-    console.log(token)
     res.cookie('jwt', token, {httpOnly: true,maxAge: 60*60*24*1000})
     return res.status(200).redirect('/posts')
      
@@ -101,17 +88,18 @@ app.post('/login', async function(req, res) {
     return res.status(400).json({message: error.message})
   } 
 })
-app.get('/posts', checkJwt ,function (req, res) {
-  
-
-  res.send('<h2> Selena </h2>')
+app.get('/posts', checkJwt , async function (req, res) {
+  const text = "SELECT * FROM users"
+  const { rows } = await postgresClient.query(text)
+  res.render('User_list_page.ejs', {
+    rows
+  })
 })
 
 app.get('/logout', function(req,res) {
   res.cookie('jwt', '',{maxAge:1})
   res.redirect('/login')
-})
-
+}) 
 
 app.listen(PORT, () => {
   console.log(`Listen on port ${PORT}`)
