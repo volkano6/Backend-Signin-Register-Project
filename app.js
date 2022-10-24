@@ -6,7 +6,7 @@ const jwt = require('jsonwebtoken')
 const checkJwt = require('./auth')
 const cookieParser = require('cookie-parser');
 const ejs = require('ejs');
-
+const logger = require('./logger');
 
 
 const PORT = 3000
@@ -23,6 +23,7 @@ app.use(cookieParser())
 
 //Routes
 app.get('/login', function (req, res) {
+  logger.userlogger.log('info', "sdasdyhasd") 
   res.cookie('jwt', '',{maxAge:1})
   res.sendFile(path.join(__dirname+'/views/login.html'))
 })
