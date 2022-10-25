@@ -17,7 +17,6 @@ exports.register_post = async function(req, res) {
       const  now_date = new Date()
       const values = [req.body.name, req.body.surname, req.body.email, req.body.password, now_date]
       const { rows } = await postgresClient.query(text, values)
-      console.log("User is created.")
 
       logger.register_logger.log('info', `${req.body.email} is registered!`) 
       
@@ -29,7 +28,6 @@ exports.register_post = async function(req, res) {
         email: email,
         exp: Math.floor(Date.now() / 1000) + (60*60*24)
       }, 'secretKey')
-      console.log("JWT TOKEN is created.")
       
       res.cookie('jwt', token, {httpOnly: true,maxAge: 60*60*24*1000})
       
